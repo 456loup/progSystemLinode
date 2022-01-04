@@ -7,6 +7,12 @@
 #include <string.h> 
 #include <sys/stat.h>
 
+extern char **environ;
+
+
+
+
+
 void viderChaineCarac(char chaine[]){
     for(int i = 0 ; chaine[i] != '\0' ; i++){
         chaine[i] = ' '; 
@@ -43,14 +49,28 @@ void copieFichier(char *fichierSrc , char *fichierDest){
     close(d2); 
 }
 
+void processus(){
+
+    pid_t proc = fork(); 
+
+    if(proc == 0){
+    
+        printf(" je suis le processus fils de %d et je suis %d " , getppid() , getpid());
+	execl("usr/bin/date" , "usr/bin/date"); 
+	printf("Fin du processus fils"); 
+    }else{
+        printf(" je suis le processus pere  %d et je suis le pere de %d \n" , getpid() , proc);
+    }
+}
+
 void copieRep(char *repSource , char *repDest){
 
-    char repSource[500]; 
-    char repDest[500];
-    char tampon[500];  
+    char tampon[500]; 
+    char tampon2[500]; 
+    int desc = 0;  
     DIR *dirSource; 
     DIR *dirDest;
-    struct dirent ent;
+    struct dirent *ent;
     struct stat st;  
      
 
@@ -64,23 +84,47 @@ void copieRep(char *repSource , char *repDest){
         dirDest = opendir(repDest); 	
     }
 
+    while( (ent = readdir(dirSource)) != NULL){
+    
+        viderChaineCarac(tampon);	
+	strcpy(tampon , repDest);
+        strcat(tampon , "/");
+	strcat(tampon , ent->d_name);
 
-    while( (ent = readdir(dirSource) != NULL)){
-    
-        viderChaineCarac(tampon); 
-	strcpy(	
-    
-    
+        viderChaineCarac(tampon2); 
+	strcpy(tampon2 , repSource); 
+	strcat(tampon2 , "/"); 
+	strcat(tampon2 , ent->d_name); 
+
+        lstat(tampon2 , &st); 
+        if( S_ISREG(st.st_mode)){
+	    copieFichier(tampon2 , tampon);  
+	}else if(S_ISDIR(st.st_mode)){
+	    copieRep(tampon2 , tampon); 
+	}
     }
-   
-     
-    
-    
+
+    closedir(dirSource); 
+    closedir(dirDest); 
+}
+
+
+void processusParallele(){
+
+    char *env = getenv("HOME");
+    int i = 0; 
+
+    for(i = 0 ; environ[i] != NULL ; i++){
+        printf("\n %s " , environ[i]); 
+    }
+
+    printf("\n\n"); 
 }
 
 int main(int argc , char **argv){
 
-   copieFichier(argv[1] , argv[2]);  
-
+   //copieRep(argv[1] , argv[2]);  
+   //processusParallele();
+   processus();  
 }
 

@@ -13,13 +13,33 @@
  sscanf(s, "%f", &x); /* lecture dans la chaîne 
 printf("Vous avez saisi : %f\n", x);
 return 0;
- 
-  */
+*/
 
 
 
 extern char **environ;
+void enleverEspaceFinRetour(char ligne[]){
 
+    for(int i = 0 ; ligne[i] != '\0' ; i++){
+        if(/* ligne[i] == ' ' ||*/   ligne[i] == '\n'){
+	    ligne[i] = '\0'; 
+	} 
+    }
+}
+
+void infoProcessus(){
+
+    char buffer[500]; 
+    char resultat[500]; 
+    printf(" on est dans le processus %d  entrez le nom du repertoire  " , getpid());
+    fgets(buffer , 500 , stdin);
+    enleverEspaceFinRetour(buffer); 
+    if( (chdir(buffer)) != 0){
+        printf(" NOM DU REPERTOIRE ERRONE "); 
+	exit(1); 
+    }
+    printf(" CHANGEMENT REUSSI REPERTOIRE COURANT %s " , getcwd(resultat , 500));   
+}
 
 void viderChaineCarac(char chaine[]){
     for(int i = 0 ; chaine[i] != '\0' ; i++){
@@ -192,15 +212,46 @@ void processusParallele(){
     printf("\n\n"); 
 }
 
+void sousTraitUpperCase(){
+
+    char buffer[500];
+    while(1){
+        pid_t proc = fork();
+        if(proc == 0){     
+            for(int i = 0 ; buffer[i] != '\0' && buffer[i] >= 65 && buffer[i] <= 122 || buffer[i] == ' '  ; i++){
+	        printf("%c" , buffer[i]-32); 
+	    }
+	    exit(0); 
+        }else{
+	    wait(NULL); 
+            printf(" entrez une chaine quelconque :  ");
+	    fgets(buffer , 500 , stdin);
+        }    
+    }
+}
+
+
+void testFork(){
+
+    printf(" HALLO WORKD "); 
+    fork(); 
+    fork(); 
+
+
+}
+
 int main(int argc , char **argv){
 
+
+   sousTraitUpperCase(); 
+   //testFork(); 
+   //infoProcessus(); 
    //copieFichier(argv[1] , argv[2]); 
-   copieRep(argv[1] , argv[2]);  
+   //copieRep(argv[1] , argv[2]);  
    //processusParallele();
    //processus(); 
    //testExecvp();  
    //entrerCommandeSansArgument();
    //Texecvp(); 
-
 }
 

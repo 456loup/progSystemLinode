@@ -6,11 +6,19 @@
 #include <dirent.h>
 #include <string.h> 
 #include <sys/stat.h>
+#include <sys/wait.h>
+
+/*
+  CHEAT SHEET 
+ sscanf(s, "%f", &x); /* lecture dans la chaîne 
+printf("Vous avez saisi : %f\n", x);
+return 0;
+ 
+  */
+
+
 
 extern char **environ;
-
-
-
 
 
 void viderChaineCarac(char chaine[]){
@@ -56,14 +64,73 @@ void processus(){
     if(proc == 0){
     
         printf(" je suis le processus fils de %d et je suis %d " , getppid() , getpid());
-	execl("usr/bin/date" , "usr/bin/date"); 
+	execl("/usr/bin/date" , "/usr/bin/date" , NULL); 
 	printf("Fin du processus fils"); 
     }else{
         printf(" je suis le processus pere  %d et je suis le pere de %d \n" , getpid() , proc);
     }
 }
 
-void copieRep(char *repSource , char *repDest){
+void testExecvp(){
+
+    char *cmd = "ls"; 
+    char *argv[2]; 
+    argv[0] = "ls"; 
+    argv[1] = NULL; 
+
+    execvp(cmd , argv);  
+
+}
+
+void Texecvp(){
+
+    char buffer[100];
+    char *litteral; 
+
+    printf(" entrez la commande : "); 
+    fgets(buffer , 100 , stdin); 
+    for(int i = 0 ; i < 100 ; i++){
+        if(buffer[i] == ' ' || buffer[i] ==  '\n'){
+	    buffer[i] = '\0';
+	    break;  
+	} 
+    }
+    char *argv[2]; 
+    argv[0] = buffer; 
+    argv[1] = NULL;
+    execvp(buffer , argv); 
+     
+}
+
+void entrerCommandeSansArgument(){
+
+    pid_t proc = fork(); 
+    char buffer[100];
+    char *chaineLitterale; 
+    int i = 0; 
+
+    if(proc == 0){
+        printf("entrez la commande sans arguments"); 
+	fgets(buffer , 100 , stdin); 
+        for(i = 0 ; i < 100  ; i++){
+	    if(buffer[i] == '\n' || buffer[i] == ' '){
+	        buffer[i] = '\0'; 
+		break; 
+	    }
+	} 
+	printf("\n\n WHATEVER%struc  \n\n " , buffer);
+        char *argv[2]; 
+	argv[0] = buffer; 
+	argv[1] = NULL; 	
+	execvp(buffer , argv); 	
+    }else{
+	wait(NULL);   
+        printf(" on est dans le processus pere le prog va s arreter ");  
+    }
+
+}
+
+void copieRep(char repSource[] , char repDest[]){
 
     char tampon[500]; 
     char tampon2[500]; 
@@ -84,6 +151,7 @@ void copieRep(char *repSource , char *repDest){
         dirDest = opendir(repDest); 	
     }
 
+    /*   */
     while( (ent = readdir(dirSource)) != NULL){
     
         viderChaineCarac(tampon);	
@@ -96,11 +164,14 @@ void copieRep(char *repSource , char *repDest){
 	strcat(tampon2 , "/"); 
 	strcat(tampon2 , ent->d_name); 
 
-        lstat(tampon2 , &st); 
-        if( S_ISREG(st.st_mode)){
-	    copieFichier(tampon2 , tampon);  
-	}else if(S_ISDIR(st.st_mode)){
-	    copieRep(tampon2 , tampon); 
+        lstat(tampon2 , &st);
+        if(strcmp(ent->d_name , "..") != 0 && strcmp(ent->d_name , ".") != 0){  	
+            if( S_ISREG(st.st_mode)){
+	        copieFichier(tampon2 , tampon);  
+	    }else if(S_ISDIR(st.st_mode)){
+	        printf(" VOUS DEVEZ LE FAIRE %s" , tampon); 
+	        copieRep(tampon2 , tampon); 
+	    }
 	}
     }
 
@@ -123,8 +194,13 @@ void processusParallele(){
 
 int main(int argc , char **argv){
 
-   //copieRep(argv[1] , argv[2]);  
+   //copieFichier(argv[1] , argv[2]); 
+   copieRep(argv[1] , argv[2]);  
    //processusParallele();
-   processus();  
+   //processus(); 
+   //testExecvp();  
+   //entrerCommandeSansArgument();
+   //Texecvp(); 
+
 }
 
